@@ -80,6 +80,10 @@ Open [`http://localhost:5173`](http://localhost:5173). The sample `VITE_API_URL`
 
 The `.env` files contain local configuration and must not be committed. The repository ignores them; `.env.example` files contain safe sample values for setup.
 
+## Deployment
+
+The frontend can be deployed to Vercel from the `frontend` directory, and the API can be deployed to Render from `backend`. On Vercel, set `VITE_API_URL` to `/api`; `frontend/vercel.json` forwards API requests to the Render service and supports client-side routes. On Render, set `CLIENT_URL` to the Vercel site URL and add the MongoDB and JWT environment variables. Keep payment keys on the backend.
+
 ## Products and payments
 
 The catalogue starts empty until products are added to MongoDB. To add a product, sign in with an admin account and send a `POST /products` request with `name`, `description`, `price`, `category`, `image`, and `stock` fields. New accounts are regular customers by default. To grant admin access to an account, first register it, then set `isAdmin` to `true` on its document in the `customers` collection using MongoDB Atlas or MongoDB Compass.
