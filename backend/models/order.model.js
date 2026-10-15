@@ -48,6 +48,7 @@ const orderSchema = new mongoose.Schema(
 
     razorpayOrderId: String,
     razorpayPaymentId: String,
+    inventoryReserved: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

@@ -220,6 +220,8 @@ img { max-width: 100%; display: block; }
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
+.product-form { max-width: 680px; }
+.product-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .product-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
 .product-image-wrap { display: block; background: #fff0e5; aspect-ratio: 4 / 3; }
 .product-image-wrap img {
@@ -360,4 +362,5 @@ img { max-width: 100%; display: block; }
   .cart-item img { width: 72px; height: 56px; }
   .cart-item-total { grid-column: 2; }
   .toolbar { grid-template-columns: 1fr; }
+  .product-form-row { grid-template-columns: 1fr; gap: 0; }
 }

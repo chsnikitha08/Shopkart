@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AuthField from "../components/AuthField";
+import { getErrorMessage } from "../services/api";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -24,8 +25,14 @@ export default function Login() {
     try {
       await login(form);
       navigate("/home", { replace: true });
-    } catch {
-      setError("Invalid Credentials");
+    } catch (err) {
+      if (err.authStage === "session") {
+        setError("Your password was accepted, but we couldn't confirm your session. Please reload and try again.");
+      } else if (err.response?.status === 401) {
+        setError("Invalid Credentials");
+      } else {
+        setError(getErrorMessage(err, "Unable to log in right now. Please try again."));
+      }
     } finally {
       setSubmitting(false);
     }

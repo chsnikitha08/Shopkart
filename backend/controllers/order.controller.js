@@ -9,6 +9,50 @@ import asyncHandler from "../utils/asyncHandler.js";
 
 const bad = (res, status, message) => res.status(status).json({ success: false, message });
 
+class StockReservationError extends Error {}
+
+const reserveInventory = async (items) => {
+  const reserved = [];
+  for (const item of items) {
+    const result = await Product.updateOne(
+      { _id: item.product, stock: { $gte: item.quantity } },
+      { $inc: { stock: -item.quantity } }
+    );
+    if (result.modifiedCount !== 1) {
+      await restoreInventory(reserved);
+      const product = await Product.findById(item.product).select("name").lean();
+      throw new StockReservationError(
+        product ? `Insufficient stock for ${product.name}.` : "A product in your cart is no longer available."
+      );
+    }
+    reserved.push(item);
+  }
+};
+
+const restoreInventory = async (items) => {
+  if (!items.length) return;
+  await Product.bulkWrite(
+    items.map((item) => ({
+      updateOne: {
+        filter: { _id: item.product },
+        update: { $inc: { stock: item.quantity } },
+      },
+    }))
+  );
+};
+
+// Atomically release an unpaid reservation once, even if cancellation and payment
+// callbacks arrive at nearly the same time.
+const failPendingOrder = async (orderId, userId) => {
+  const order = await Order.findOneAndUpdate(
+    { _id: orderId, user: userId, paymentStatus: "PENDING", inventoryReserved: true },
+    { $set: { paymentStatus: "FAILED", inventoryReserved: false } },
+    { new: true }
+  );
+  if (order) await restoreInventory(order.items);
+  return order;
+};
+
 // POST /orders/create-payment-order
 export const createPaymentOrder = asyncHandler(async (req, res) => {
   const { value: shippingAddress, error } = validateShipping(req.body?.shippingAddress);
@@ -29,9 +73,6 @@ export const createPaymentOrder = asyncHandler(async (req, res) => {
     if (!product) {
       return bad(res, 400, "A product in your cart is no longer available. Please review your cart.");
     }
-    if (cartItem.quantity > product.stock) {
-      return bad(res, 400, `Insufficient stock for ${product.name}.`);
-    }
     items.push({
       product: product._id,
       name: product.name,
@@ -42,12 +83,26 @@ export const createPaymentOrder = asyncHandler(async (req, res) => {
     totalAmount += product.price * cartItem.quantity;
   }
 
-  const order = await Order.create({
-    user: customer._id,
-    items,
-    shippingAddress,
-    totalAmount,
-  });
+  try {
+    await reserveInventory(items);
+  } catch (err) {
+    if (err instanceof StockReservationError) return bad(res, 400, err.message);
+    throw err;
+  }
+
+  let order;
+  try {
+    order = await Order.create({
+      user: customer._id,
+      items,
+      shippingAddress,
+      totalAmount,
+      inventoryReserved: true,
+    });
+  } catch (err) {
+    await restoreInventory(items);
+    throw err;
+  }
 
   let razorpayOrder;
   try {
@@ -58,8 +113,7 @@ export const createPaymentOrder = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error("Razorpay order creation failed:", err?.error || err);
-    order.paymentStatus = "FAILED";
-    await order.save();
+    await failPendingOrder(order._id, customer._id);
     return bad(res, 502, "Unable to start payment. Please try again.");
   }
 
@@ -108,23 +162,30 @@ export const verifyPayment = asyncHandler(async (req, res) => {
     return bad(res, 400, "Invalid payment signature");
   }
 
-  order.paymentStatus = "PAID";
-  order.status = "PLACED";
-  order.razorpayPaymentId = razorpay_payment_id;
-  await order.save();
-
-  await Product.bulkWrite(
-    order.items.map((i) => ({
-      updateOne: {
-        filter: { _id: i.product, stock: { $gte: i.quantity } },
-        update: { $inc: { stock: -i.quantity } },
+  const paidOrder = await Order.findOneAndUpdate(
+    {
+      _id: order._id,
+      user: req.user._id,
+      paymentStatus: "PENDING",
+      inventoryReserved: true,
+    },
+    {
+      $set: {
+        paymentStatus: "PAID",
+        status: "PLACED",
+        razorpayPaymentId: razorpay_payment_id,
+        inventoryReserved: false,
       },
-    }))
+    },
+    { new: true }
   );
+  if (!paidOrder) {
+    return bad(res, 409, "This payment attempt is no longer active. Please contact support if you were charged.");
+  }
 
   await Customer.updateOne({ _id: req.user._id }, { $set: { cart: [] } });
 
-  res.status(200).json({ success: true, message: "Payment verified. Order placed.", order });
+  res.status(200).json({ success: true, message: "Payment verified. Order placed.", order: paidOrder });
 });
 
 // POST /orders/payment-failed   body: { shopKartOrderId }
@@ -132,10 +193,7 @@ export const markPaymentFailed = asyncHandler(async (req, res) => {
   const { shopKartOrderId } = req.body || {};
   if (!mongoose.isValidObjectId(shopKartOrderId)) return bad(res, 400, "Invalid order ID");
 
-  await Order.updateOne(
-    { _id: shopKartOrderId, user: req.user._id, paymentStatus: "PENDING" },
-    { $set: { paymentStatus: "FAILED" } }
-  );
+  await failPendingOrder(shopKartOrderId, req.user._id);
   res.status(200).json({ success: true, message: "Payment marked as failed" });
 });
 

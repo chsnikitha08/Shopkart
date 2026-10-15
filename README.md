@@ -86,7 +86,7 @@ The frontend can be deployed to Vercel from the `frontend` directory, and the AP
 
 ## Products and payments
 
-The catalogue starts empty until products are added to MongoDB. To add a product, sign in with an admin account and send a `POST /products` request with `name`, `description`, `price`, `category`, `image`, and `stock` fields. New accounts are regular customers by default. To grant admin access to an account, first register it, then set `isAdmin` to `true` on its document in the `customers` collection using MongoDB Atlas or MongoDB Compass.
+The catalogue starts empty until products are added. Sign in and choose **Add Product** in the navigation bar to add an item to the shared catalogue. The matching `POST /products` API is intentionally open, as specified in the product catalog lab, so it can also be called without signing in. This means anyone who can reach the API can add catalogue items.
 
 Razorpay credentials are only needed to test checkout. Add your Razorpay **Test Mode** credentials to `backend/.env` and restart the backend. Use Razorpay's test payment details; test transactions do not move real money.
 
@@ -97,7 +97,7 @@ Razorpay credentials are only needed to test checkout. Add your Razorpay **Test 
 | `POST` | `/customers/register` | Create an account |
 | `POST` | `/customers/login` | Sign in |
 | `GET` | `/customers/me` | Get the signed-in customer |
-| `POST` | `/products` | Add a product (admin only) |
+| `POST` | `/products` | Add a product (open API) |
 | `GET` | `/products` | List products; supports `search`, `category`, and `sort` query parameters |
 | `GET` | `/products/:id` | Get product details |
 | `GET`, `POST`, `DELETE` | `/wishlist` and `/wishlist/:productId` | View and update wishlist |

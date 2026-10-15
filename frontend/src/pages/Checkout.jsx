@@ -35,6 +35,7 @@ export default function Checkout() {
   const { user } = useAuth();
   const { items, loading, totalUnits, subtotal, clearCartState } = useCart();
   const paidRef = useRef(false);
+  const verificationStarted = useRef(false);
 
   const [form, setForm] = useState({
     fullName: user?.fullName || "",
@@ -100,6 +101,7 @@ export default function Checkout() {
       order_id: data.razorpayOrderId,
 
       handler: async (response) => {
+        verificationStarted.current = true;
         try {
           const res = await orderApi.verifyPayment({
             shopKartOrderId: data.shopKartOrderId,
@@ -123,7 +125,8 @@ export default function Checkout() {
 
       modal: {
         ondismiss: () => {
-          if (paidRef.current) return;
+          if (paidRef.current || verificationStarted.current) return;
+          orderApi.paymentFailed(data.shopKartOrderId).catch(() => {});
           setPaying(false);
           setServerError("Payment was cancelled. Your cart has not been cleared.");
         },
@@ -131,7 +134,6 @@ export default function Checkout() {
     });
 
     rzp.on("payment.failed", () => {
-      orderApi.paymentFailed(data.shopKartOrderId).catch(() => {});
       setServerError("Payment failed. Your cart has not been cleared. Please try again.");
       setPaying(false);
     });

@@ -25,6 +25,7 @@ export default function Navbar() {
           <nav className="nav-links" aria-label="Main">
             <NavLink to="/home">Home</NavLink>
             <NavLink to="/products">Products</NavLink>
+            <NavLink to="/products/new">Add Product</NavLink>
             <NavLink to="/wishlist">Wishlist</NavLink>
             <NavLink to="/cart" className="cart-link">
               Cart

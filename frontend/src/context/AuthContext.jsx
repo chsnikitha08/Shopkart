@@ -17,8 +17,15 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     await authApi.login(credentials);
-    const res = await authApi.me();
-    setUser(res.data);
+    try {
+      const res = await authApi.me();
+      setUser(res.data);
+    } catch (error) {
+      throw Object.assign(new Error("The login succeeded, but the session could not be confirmed."), {
+        authStage: "session",
+        cause: error,
+      });
+    }
   };
 
   const logout = async () => {

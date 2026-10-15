@@ -18,6 +18,7 @@ export const authApi = {
 export const productApi = {
   list: (params) => api.get("/products", { params }),
   get: (id) => api.get(`/products/${id}`),
+  create: (data) => api.post("/products", data),
 };
 
 export const wishlistApi = {

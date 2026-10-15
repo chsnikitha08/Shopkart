@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
+import ProductCreate from "./pages/ProductCreate";
 import ProductDetails from "./pages/ProductDetails";
 import Wishlist from "./pages/Wishlist";
 import Cart from "./pages/Cart";
@@ -50,6 +51,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/new" element={<ProductCreate />} />
           <Route path="/products/:id" element={<ProductDetails />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<Cart />} />
