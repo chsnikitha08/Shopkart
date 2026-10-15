@@ -1,87 +1,107 @@
-# ShopKart (Labs 01 to 06)
+# ShopKart
 
-A full MERN e-commerce app: auth, product catalogue, wishlist, cart, checkout with Razorpay (Test Mode) and order history.
+ShopKart is a full-stack e-commerce application for browsing products and managing an online shopping experience. Customers can create an account, search and sort the catalogue, save items to a wishlist, manage a cart, check out with Razorpay test payments, and view their orders.
 
-```
-shopkart/
-├── backend/    Node + Express + MongoDB (MVC)
-└── frontend/   React (Vite) + React Router + Context API
-```
+## Features
 
-## Prerequisites
+- Customer registration, login, logout, and password changes
+- Product browsing, search, category filtering, and price sorting
+- Wishlist and shopping cart
+- Checkout and payment verification with Razorpay Test Mode
+- Order history and order details
+- MongoDB persistence
+
+## Technology
+
+- **Frontend:** React, Vite, React Router, Context API, Axios
+- **Backend:** Node.js, Express, Mongoose
+- **Database:** MongoDB
+- **Payments:** Razorpay (test mode)
+
+## Requirements
 
 - Node.js 18 or newer and npm
-- MongoDB running locally, or a MongoDB Atlas connection string
-- Razorpay test-mode keys for testing checkout payments (optional)
+- MongoDB running locally or a MongoDB Atlas connection string
+- Razorpay test API keys to exercise checkout (optional for browsing the app)
 
-Install dependencies separately in `backend/` and `frontend/` as shown below.
+## Local setup
 
-## 1. Run the backend
+Clone the repository and open two terminal windows, one for the backend and one for the frontend.
+
+```bash
+git clone https://github.com/chsnikitha08/Shopkart.git
+cd Shopkart
+```
+
+### 1. Configure and start the backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env     # edit .env with your local settings
-npm run dev              # http://localhost:5001 with the sample .env
+cp .env.example .env
 ```
 
-The backend does not currently include a seed script. Add products through the database before browsing the catalogue.
+Edit `backend/.env` and set `MONGO_URI` to your MongoDB connection string and `JWT_SECRET` to a long random value. The sample file uses port `5001` and a local MongoDB URI.
 
-`.env` values:
+Start the API:
 
-| Key | Meaning |
-|---|---|
-| `MONGO_URI` | Mongo connection string |
-| `JWT_SECRET` | any long random string |
-| `CLIENT_URL` | frontend origin, used for CORS (default `http://localhost:5173`) |
-| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | **Test Mode** keys from the Razorpay dashboard |
+```bash
+npm run dev
+```
 
-Without Razorpay keys everything works except `POST /orders/create-payment-order`, which returns 503.
+For a non-watch process, use `npm start`. The API listens on `http://localhost:5001` with the sample configuration. Check that the server is ready at [`http://localhost:5001/health`](http://localhost:5001/health).
 
-## 2. Run the frontend
+### 2. Configure and start the frontend
+
+In a second terminal, from the repository root:
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env     # VITE_API_URL=http://localhost:5001
-npm run dev              # http://localhost:5173
+cp .env.example .env
+npm run dev
 ```
 
-The sample backend configuration sets `PORT=5001`; keep `VITE_API_URL` in the frontend configuration pointed at the same port. If you change the backend port, update both `.env` files accordingly.
+Open [`http://localhost:5173`](http://localhost:5173). The sample `VITE_API_URL` points to the backend at `http://localhost:5001`. If you change the backend port, update `VITE_API_URL` in `frontend/.env` and `CLIENT_URL` in `backend/.env` as needed.
 
-Flow: Register → Login → Products (search / filter / sort) → Wishlist → Cart → Checkout → Razorpay test payment → Order success → My Orders.
+### Environment variables
 
-## 3. Razorpay Test Mode
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `PORT` | Backend | API port (sample: `5001`) |
+| `NODE_ENV` | Backend | Runtime environment |
+| `MONGO_URI` | Backend | MongoDB connection string |
+| `JWT_SECRET` | Backend | Secret used to sign authentication tokens; replace the sample value |
+| `JWT_EXPIRES_IN` | Backend | Token lifetime (sample: `7d`) |
+| `CLIENT_URL` | Backend | Frontend origin allowed by CORS (sample: `http://localhost:5173`) |
+| `RAZORPAY_KEY_ID` | Backend | Razorpay Test Mode key ID |
+| `RAZORPAY_KEY_SECRET` | Backend | Razorpay Test Mode secret |
+| `VITE_API_URL` | Frontend | Backend API base URL |
 
-1. Razorpay Dashboard → switch to **Test Mode** → Account & Settings → API Keys → Generate.
-2. Put Key ID and Key Secret in `backend/.env`, restart the backend.
-3. At checkout, use the test card / UPI details listed in Razorpay's Test Mode documentation. No real money moves.
+The `.env` files contain local configuration and must not be committed. The repository ignores them; `.env.example` files contain safe sample values for setup.
 
-The secret stays on the server. The server computes the amount in paise, creates the Razorpay order, and verifies the HMAC-SHA256 signature using the order id stored in its own database before marking the order PAID and clearing the cart.
+## Products and payments
 
-## API summary
+The catalogue starts empty unless products have been added to MongoDB. There is no seed script. For local development, products can be added with `POST /products` using JSON fields `name`, `description`, `price`, `category`, `image`, and `stock`.
 
-| Method | Endpoint | Auth |
-|---|---|:---:|
-| POST | `/customers/register`, `/customers/login` | |
-| GET | `/customers/me` | ✅ |
-| POST | `/customers/logout` | ✅ |
-| PATCH | `/customers/change-password` (bonus) | ✅ |
-| POST / GET | `/products`, `/products?search=&category=&sort=` | |
-| GET | `/products/:id` | |
-| GET | `/wishlist` | ✅ |
-| POST / DELETE | `/wishlist/:productId` | ✅ |
-| PATCH | `/wishlist/:productId/toggle` (bonus) | ✅ |
-| GET | `/cart` | ✅ |
-| POST / PATCH / DELETE | `/cart/:productId` | ✅ |
-| POST | `/orders/create-payment-order`, `/orders/verify-payment`, `/orders/payment-failed` | ✅ |
-| GET | `/orders`, `/orders/:id` | ✅ |
+> **Deployment note:** `POST /products` currently has no authentication or admin authorization. Do not expose it on a public deployment without adding appropriate access controls.
 
-## Decisions where the lab documents disagreed
+Razorpay is optional for browsing and using the catalogue. To test payments, add Razorpay **Test Mode** credentials to `backend/.env` and restart the backend. Use Razorpay's test payment details; test transactions do not move real money. Never put the Razorpay secret in the frontend or commit it to GitHub.
 
-- **One user model.** Lab 01 names it `Customer`; Labs 04 and 05 say "User". The app uses `Customer` everywhere and adds `wishlist` and `cart` to it.
-- **Cookie auth throughout.** Lab 04's `Authorization: Bearer` example is accepted as a fallback only (handy for API tools); the browser uses the HttpOnly cookie.
-- **Endpoint name.** Lab 06's diagrams say `POST /orders`; the real endpoint used is `/orders/create-payment-order`.
-- **Context API** is used for auth and cart state (Redux Toolkit is the alternative the lab allows).
-- **Extras beyond the spec:** product stock is decremented after a verified payment; `GET /orders` lists only paid orders (abandoned checkouts stay hidden); `POST /orders/payment-failed` marks a pending order FAILED.
-- Bonuses included: change password, product sorting, wishlist toggle.
+## Main API routes
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/customers/register` | Create an account |
+| `POST` | `/customers/login` | Sign in |
+| `GET` | `/customers/me` | Get the signed-in customer |
+| `GET` | `/products` | List products; supports `search`, `category`, and `sort` query parameters |
+| `GET` | `/products/:id` | Get product details |
+| `GET`, `POST`, `DELETE` | `/wishlist` and `/wishlist/:productId` | View and update wishlist |
+| `GET`, `POST`, `PATCH`, `DELETE` | `/cart` and `/cart/:productId` | View and update cart |
+| `POST` | `/orders/create-payment-order` | Create a payment order |
+| `POST` | `/orders/verify-payment` | Verify payment |
+| `GET` | `/orders` and `/orders/:id` | View orders |
+| `GET` | `/health` | Check API availability |
+
+Authentication uses an HTTP-only cookie in the browser. Authenticated routes require the customer to be signed in.
