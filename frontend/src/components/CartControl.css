@@ -1,0 +1,55 @@
+.cart-control {
+  display: grid;
+  gap: 0.35rem;
+}
+.cart-control.compact {
+  max-width: 220px;
+}
+
+.cart-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1.5px solid var(--primary);
+  border-radius: 999px;
+  padding: 0.2rem;
+  background: #fff;
+}
+.cart-stepper .step {
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  border: 0;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 160ms ease, transform 160ms ease;
+}
+.cart-stepper .step:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: scale(1.06);
+}
+.cart-stepper .step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.cart-stepper .count {
+  min-width: 2rem;
+  text-align: center;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.cart-control .hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}

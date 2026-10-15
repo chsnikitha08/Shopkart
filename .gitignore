@@ -1,0 +1,11 @@
+# Dependencies and generated build output
+**/node_modules/
+frontend/dist/
+
+# Local environment files; keep the documented templates in version control
+**/.env
+**/.env.*
+!**/.env.example
+
+# macOS metadata
+.DS_Store
