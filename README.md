@@ -82,11 +82,9 @@ The `.env` files contain local configuration and must not be committed. The repo
 
 ## Products and payments
 
-The catalogue starts empty unless products have been added to MongoDB. There is no seed script. For local development, products can be added with `POST /products` using JSON fields `name`, `description`, `price`, `category`, `image`, and `stock`.
+The catalogue starts empty until products are added to MongoDB. To add a product during development, send a `POST /products` request with `name`, `description`, `price`, `category`, `image`, and `stock` fields.
 
-> **Deployment note:** `POST /products` currently has no authentication or admin authorization. Do not expose it on a public deployment without adding appropriate access controls.
-
-Razorpay is optional for browsing and using the catalogue. To test payments, add Razorpay **Test Mode** credentials to `backend/.env` and restart the backend. Use Razorpay's test payment details; test transactions do not move real money. Never put the Razorpay secret in the frontend or commit it to GitHub.
+Razorpay credentials are only needed to test checkout. Add your Razorpay **Test Mode** credentials to `backend/.env` and restart the backend. Use Razorpay's test payment details; test transactions do not move real money.
 
 ## Main API routes
 
