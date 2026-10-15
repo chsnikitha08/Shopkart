@@ -82,7 +82,7 @@ The `.env` files contain local configuration and must not be committed. The repo
 
 ## Products and payments
 
-The catalogue starts empty until products are added to MongoDB. To add a product during development, send a `POST /products` request with `name`, `description`, `price`, `category`, `image`, and `stock` fields.
+The catalogue starts empty until products are added to MongoDB. To add a product, sign in with an admin account and send a `POST /products` request with `name`, `description`, `price`, `category`, `image`, and `stock` fields. New accounts are regular customers by default. To grant admin access to an account, first register it, then set `isAdmin` to `true` on its document in the `customers` collection using MongoDB Atlas or MongoDB Compass.
 
 Razorpay credentials are only needed to test checkout. Add your Razorpay **Test Mode** credentials to `backend/.env` and restart the backend. Use Razorpay's test payment details; test transactions do not move real money.
 
@@ -93,6 +93,7 @@ Razorpay credentials are only needed to test checkout. Add your Razorpay **Test 
 | `POST` | `/customers/register` | Create an account |
 | `POST` | `/customers/login` | Sign in |
 | `GET` | `/customers/me` | Get the signed-in customer |
+| `POST` | `/products` | Add a product (admin only) |
 | `GET` | `/products` | List products; supports `search`, `category`, and `sort` query parameters |
 | `GET` | `/products/:id` | Get product details |
 | `GET`, `POST`, `DELETE` | `/wishlist` and `/wishlist/:productId` | View and update wishlist |

@@ -25,8 +25,9 @@ const customerSchema = new mongoose.Schema(
     // bcrypt hash only. Hidden from queries unless explicitly selected.
     password: { type: String, required: true, select: false },
     phone: { type: String, required: true, trim: true },
+    isAdmin: { type: Boolean, default: false },
 
-    // Lab 04: product references only (no copied product data)
+    // Product references only (no copied product data)
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
 
     // Lab 05: product reference + quantity
